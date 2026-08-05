@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CoSave - Dashboard Tabungan Bersama</title>
+
+  <!-- Google Fonts & RemixIcon -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+  <!-- App Favicon -->
+  <link rel="icon" type="image/svg+xml" href="public/favicon.svg">
+
+  <!-- Supabase JS Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="src/styles/main.css">
+</head>
+
+<body>
+
+  <!-- Main Mobile-First Container -->
+  <div class="app-container">
+
+    <!-- Top Navigation Header -->
+    <header class="navbar">
+      <div class="brand">
+        <img src="public/favicon.svg" alt="CoSave Logo" class="brand-logo-img">
+        <div>
+          <h1 class="brand-title">Co<span class="text-gradient">Save</span></h1>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">Dashboard Tabungan Duo</p>
+        </div>
+      </div>
+
+      <button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle Theme">
+        <i class="ri-sun-line"></i>
+      </button>
+    </header>
+
+    <!-- Main Balance Card (SeaBank Focus) -->
+    <section class="bank-card">
+      <div class="bank-header">
+        <div class="bank-name">
+          <img src="public/seabank_icon_white.png" alt="SeaBank Logo" class="seabank-logo-img" id="seabankLogoImg">
+          <span>SeaBank Indonesia</span>
+        </div>
+        <button class="badge badge-seabank btn-rekening-info" id="openBankInfoBtn">
+          <i class="ri-information-line"></i> Rekening Utama <i class="ri-file-copy-line" style="margin-left: 2px;"></i>
+        </button>
+      </div>
+
+      <div class="bank-balance-label">Total Tabungan Bersama</div>
+      <div class="bank-balance-value" id="totalBalance">Rp 0</div>
+    </section>
+
+    <!-- Duo Contribution Breakdown Section -->
+    <section class="duo-stats">
+      <!-- Galih Card -->
+      <div class="user-stat-card">
+        <div class="user-info">
+          <div class="avatar avatar-galih">G</div>
+          <div>
+            <div class="user-name">Galih</div>
+            <div class="user-percentage" id="galihPercent">0% Kontribusi</div>
+          </div>
+        </div>
+        <div class="user-amount" id="galihAmount">Rp 0</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-galih" id="galihBar" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <!-- Fara Card -->
+      <div class="user-stat-card">
+        <div class="user-info">
+          <div class="avatar avatar-fara">F</div>
+          <div>
+            <div class="user-name">Fara</div>
+            <div class="user-percentage" id="faraPercent">0% Kontribusi</div>
+          </div>
+        </div>
+        <div class="user-amount" id="faraAmount">Rp 0</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-fara" id="faraBar" style="width: 50%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Multi-Goal Savings Section -->
+    <section style="margin-bottom: 24px;">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="ri-flag-2-fill" style="color: var(--primary);"></i> Target Bersama
+        </h2>
+        <button class="btn-add-goal" id="openGoalModalBtn">
+          <i class="ri-add-circle-line"></i> Tambah Goal
+        </button>
+      </div>
+
+      <div class="goals-grid" id="goalsContainer">
+        <!-- Goals rendering dynamically -->
+      </div>
+    </section>
+
+    <!-- History / Activity Feed Section -->
+    <section style="margin-bottom: 40px;">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="ri-history-line" style="color: var(--secondary);"></i> Riwayat Transaksi
+        </h2>
+      </div>
+
+      <div class="history-list" id="historyContainer">
+        <!-- Transaction list dynamic render -->
+      </div>
+    </section>
+
+  </div> <!-- End App Container -->
+
+  <!-- Bottom Navigation & Floating Add Action Button -->
+  <nav class="bottom-nav">
+    <button class="nav-item active">
+      <i class="ri-dashboard-3-fill"></i>
+      <span>Beranda</span>
+    </button>
+
+    <button class="fab-add" id="openModalBtn" title="Tambah Transaksi">
+      <i class="ri-add-line"></i>
+    </button>
+
+    <button class="nav-item" id="openGoalModalBtnNav" onclick="document.getElementById('openGoalModalBtn').click()">
+      <i class="ri-trophy-line"></i>
+      <span>Target</span>
+    </button>
+  </nav>
+
+  <!-- Modal Overlay Input Transaksi Baru -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <i class="ri-exchange-dollar-line" style="color: var(--primary);"></i> Tambah Transaksi Tabungan
+        </h3>
+        <button class="modal-close" id="closeModalBtn" aria-label="Close">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <form id="transactionForm">
+        <!-- Transaksi Type (Radio) -->
+        <div class="form-group">
+          <label class="form-label">Jenis Transaksi</label>
+          <div class="radio-group">
+            <div class="radio-btn">
+              <input type="radio" id="typeIncome" name="txType" value="income" checked>
+              <label for="typeIncome" class="radio-label" style="color: var(--accent-green);">
+                <i class="ri-add-circle-line"></i> Setoran (+)
+              </label>
+            </div>
+            <div class="radio-btn">
+              <input type="radio" id="typeExpense" name="txType" value="expense">
+              <label for="typeExpense" class="radio-label" style="color: var(--accent-red);">
+                <i class="ri-indeterminate-circle-line"></i> Penarikan (-)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Penyetor Role -->
+        <div class="form-group">
+          <label class="form-label">Penyetor / Kontributor</label>
+          <div class="radio-group">
+            <div class="radio-btn">
+              <input type="radio" id="userGalih" name="userRole" value="galih" checked>
+              <label for="userGalih" class="radio-label">
+                <div class="avatar avatar-galih" style="width: 20px; height: 20px; font-size: 0.7rem;">G</div> Galih
+              </label>
+            </div>
+            <div class="radio-btn">
+              <input type="radio" id="userFara" name="userRole" value="fara">
+              <label for="userFara" class="radio-label">
+                <div class="avatar avatar-fara" style="width: 20px; height: 20px; font-size: 0.7rem;">F</div> Fara
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amount Input + Quick Amounts -->
+        <div class="form-group">
+          <label class="form-label" for="amountInput">Nominal (Rp)</label>
+          <input type="number" id="amountInput" class="form-control" placeholder="Contoh: 500000" required min="1000">
+          <div class="quick-amounts">
+            <button type="button" class="btn-quick" data-val="50000">+50k</button>
+            <button type="button" class="btn-quick" data-val="100000">+100k</button>
+            <button type="button" class="btn-quick" data-val="500000">+500k</button>
+            <button type="button" class="btn-quick" data-val="1000000">+1M</button>
+          </div>
+        </div>
+
+        <!-- Alokasi Target Goal -->
+        <div class="form-group">
+          <label class="form-label" for="goalSelect">Alokasi Target (Opsional)</label>
+          <select id="goalSelect" class="form-control">
+            <!-- Dynamic goal options -->
+          </select>
+        </div>
+
+        <!-- Kategori -->
+        <div class="form-group">
+          <label class="form-label" for="categoryInput">Kategori</label>
+          <select id="categoryInput" class="form-control">
+            <option value="Tabungan Rutin Bulanan">💵 Tabungan Rutin Bulanan</option>
+            <option value="Bonus / Side Job">🎁 Bonus / Side Job</option>
+            <option value="Alokasi Target Spesifik">🎯 Alokasi Target Spesifik</option>
+            <option value="Pengeluaran Bersama">🛍️ Pengeluaran Bersama</option>
+            <option value="Lainnya">✨ Lainnya</option>
+          </select>
+        </div>
+
+        <!-- Date Input -->
+        <div class="form-group">
+          <label class="form-label" for="txDate">Tanggal Transaksi</label>
+          <input type="date" id="txDate" class="form-control" required>
+        </div>
+
+        <!-- Note Input -->
+        <div class="form-group">
+          <label class="form-label" for="noteInput">Catatan</label>
+          <input type="text" id="noteInput" class="form-control" placeholder="Tulis ucapan/pesan manis...">
+        </div>
+
+        <!-- Upload Bukti Transfer (Screenshot) -->
+        <div class="form-group">
+          <label class="form-label" for="proofInput">Upload Bukti Transfer / Screenshot (Opsional)</label>
+          <input type="file" id="proofInput" class="form-control" accept="image/*">
+          <div id="proofPreviewContainer" style="display: none; margin-top: 8px;">
+            <img id="proofPreviewImg" src="" alt="Preview Bukti" style="max-width: 100%; max-height: 120px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: contain;">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="ri-check-line"></i> Simpan Transaksi
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay Tambah Target Goal Baru -->
+  <div class="modal-overlay" id="goalModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="ri-trophy-line" style="color: var(--primary);"></i> Buat Target Tabungan Baru</h3>
+        <button class="modal-close" id="closeGoalModalBtn" aria-label="Close">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <form id="goalForm">
+        <div class="form-group">
+          <label class="form-label" for="goalTitleInput">Nama Target</label>
+          <input type="text" id="goalTitleInput" class="form-control" placeholder="Contoh: Beli Laptop Bersama" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="goalTargetInput">Target Nominal (Rp)</label>
+          <input type="number" id="goalTargetInput" class="form-control" placeholder="Contoh: 12000000" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="goalIconInput">Pilih Ikon Emoji</label>
+          <select id="goalIconInput" class="form-control">
+            <option value="💍">💍 Dana Nikah</option>
+            <option value="✈️">✈️ Liburan</option>
+            <option value="🏠">🏠 Rumah / Properti</option>
+            <option value="🚘">🚘 Kendaraan</option>
+            <option value="🛡️">🛡️ Dana Darurat</option>
+            <option value="📱">📱 Gadget / Elektronik</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit">
+          <i class="ri-add-line"></i> Tambah Target Goal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay Informasi Rekening SeaBank -->
+  <div class="modal-overlay" id="bankModalOverlay">
+    <div class="modal-card" style="text-align: center;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <i class="ri-bank-card-fill" style="color: var(--primary);"></i> Detail Rekening SeaBank
+        </h3>
+        <button class="modal-close" id="closeBankModalBtn" aria-label="Close">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div style="padding: 16px 0;">
+        <div style="width: 64px; height: 64px; border-radius: 18px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); padding: 8px;">
+          <img src="public/seabank_icon.png" alt="SeaBank" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+
+        <span class="badge badge-seabank" style="margin-bottom: 12px;">SeaBank Indonesia</span>
+        <h4 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 4px;">ACHMAD GALIH WICAKSANA PUTRA</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Pemilik Rekening Tabungan Bersama</p>
+
+        <!-- Copyable Account Number Card -->
+        <div style="background: var(--bg-input); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px;">
+          <div style="text-align: left;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Nomor Rekening</div>
+            <div style="font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; color: var(--primary);" id="accountNumberText">901523028510</div>
+          </div>
+          <button class="btn-quick" id="copyAccBtn" style="background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem;">
+            <i class="ri-file-copy-line"></i> <span id="copyBtnText">Salin</span>
+          </button>
+        </div>
+
+        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+          💡 Salin nomor rekening di atas untuk melakukan transfer atau setoran tabungan via SeaBank/Bank lain.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Preview Foto Bukti Transfer Full Size -->
+  <div class="modal-overlay" id="imageModalOverlay">
+    <div class="modal-card" style="text-align: center; max-width: 450px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <i class="ri-image-line" style="color: var(--primary);"></i> Bukti Transfer
+        </h3>
+        <button class="modal-close" id="closeImageModalBtn" aria-label="Close">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div style="padding: 10px 0;">
+        <img id="fullSizeProofImg" src="" alt="Bukti Transfer Full" style="width: 100%; max-height: 70vh; border-radius: 12px; object-fit: contain; border: 1px solid var(--border-color);">
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts Initialization -->
+  <script src="src/js/initialData.js"></script>
+  <script src="src/js/supabaseClient.js"></script>
+  <script src="src/js/app.js"></script>
+</body>
+
+</html>
