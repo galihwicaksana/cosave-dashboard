@@ -72,6 +72,7 @@ cosave_dashboard/
 
 ---
 
-## 📄 Lisensi
+## 📝 Hak Cipta & Kepemilikan (Copyright)
 
-Project ini dibuat untuk tujuan manajemen finansial bersama. Lisensi di bawah [MIT License](LICENSE).
+Copyright &copy; 2026 Achmad Galih Wicaksana Putra ([@galihwicaksana](https://github.com/galihwicaksana)). All rights reserved.
+
