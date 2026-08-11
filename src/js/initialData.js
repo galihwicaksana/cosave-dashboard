@@ -38,6 +38,8 @@ const initialData = {
   transactions: []
 };
 
-if (!localStorage.getItem('cosave_data')) {
-  localStorage.setItem('cosave_data', JSON.stringify(initialData));
+if (typeof window !== 'undefined') {
+  window.initialData = initialData;
 }
+
+export default initialData;

@@ -3,7 +3,7 @@
  * Integrasi Hybrid Supabase & LocalStorage Fallback
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
+const initApp = async () => {
   // Elements
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   const totalBalanceEl = document.getElementById('totalBalance');
@@ -533,4 +533,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Start App
   initTheme();
   await syncWithSupabase();
-});
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
