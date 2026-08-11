@@ -146,6 +146,16 @@ const initApp = async () => {
   // Render Goal Cards with Edit & Delete Actions
   const renderGoals = () => {
     goalsContainer.innerHTML = '';
+
+    if (store.goals.length === 0) {
+      goalsContainer.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: var(--text-muted); grid-column: 1 / -1;">
+          Belum ada target bersama. Klik (+ Tambah Goal) untuk membuat target baru!
+        </div>
+      `;
+      return;
+    }
+
     store.goals.forEach(goal => {
       let currentProgress = 0;
       store.transactions.forEach(tx => {
