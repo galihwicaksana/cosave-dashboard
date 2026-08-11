@@ -54,11 +54,11 @@ const initApp = async () => {
     if (currentTheme === 'dark') {
       document.body.classList.add('dark-theme');
       themeToggleBtn.innerHTML = '<i class="ri-sun-line"></i>';
-      if (logoImg) logoImg.src = 'public/seabank_icon.png';
+      if (logoImg) logoImg.src = '/seabank_icon.png';
     } else {
       document.body.classList.remove('dark-theme');
       themeToggleBtn.innerHTML = '<i class="ri-moon-line"></i>';
-      if (logoImg) logoImg.src = 'public/seabank_icon_white.png';
+      if (logoImg) logoImg.src = '/seabank_icon_white.png';
     }
   };
 
@@ -69,7 +69,7 @@ const initApp = async () => {
     themeToggleBtn.innerHTML = isDark ? '<i class="ri-sun-line"></i>' : '<i class="ri-moon-line"></i>';
     const logoImg = document.getElementById('seabankLogoImg');
     if (logoImg) {
-      logoImg.src = isDark ? 'public/seabank_icon.png' : 'public/seabank_icon_white.png';
+      logoImg.src = isDark ? '/seabank_icon.png' : '/seabank_icon_white.png';
     }
   });
 
